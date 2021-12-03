@@ -9,7 +9,7 @@
   "info": {
     "description": "Provides Sensor Data",
     "author": {
-      "name": false,
+      "name": "MSDev",
       "url": "https://kwmsys.de"
     },
     "keywords": [],
