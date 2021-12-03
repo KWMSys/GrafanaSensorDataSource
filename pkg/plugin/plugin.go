@@ -3,14 +3,13 @@ package plugin
 import (
 	"context"
 	"encoding/json"
-	"math/rand"
+	"net/http"
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
-	"github.com/grafana/grafana-plugin-sdk-go/live"
 )
 
 // Make sure SampleDatasource implements required interfaces. This is important to do
@@ -45,18 +44,17 @@ func (d *SampleDatasource) Dispose() {
 	// Clean up datasource instance resources.
 }
 
-// QueryData handles multiple queries and returns multiple responses.
-// req contains the queries []DataQuery (where each query contains RefID as a unique identifier).
-// The QueryDataResponse contains a map of RefID to the response for each query, and each response
-// contains Frames ([]*Frame).
 func (d *SampleDatasource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
-	log.DefaultLogger.Info("QueryData called", "request", req)
 
-	// create response struct
 	response := backend.NewQueryDataResponse()
-
-	// loop over queries and execute them individually.
 	for _, q := range req.Queries {
+		// token := strings.Fields(q.Headers.Get("Authorization"))
+
+		// var (
+		//   tokenType = token[0]
+		//   accessToken = token[1]
+		// )
+
 		res := d.query(ctx, req.PluginContext, q)
 
 		// save the response in a hashmap
@@ -91,18 +89,6 @@ func (d *SampleDatasource) query(_ context.Context, pCtx backend.PluginContext, 
 		data.NewField("values", nil, []int64{10, 20}),
 	)
 
-	// If query called with streaming on then return a channel
-	// to subscribe on a client-side and consume updates from a plugin.
-	// Feel free to remove this if you don't need streaming for your datasource.
-	if qm.WithStreaming {
-		channel := live.Channel{
-			Scope:     live.ScopeDatasource,
-			Namespace: pCtx.DataSourceInstanceSettings.UID,
-			Path:      "stream",
-		}
-		frame.SetMeta(&data.FrameMeta{Channel: channel.String()})
-	}
-
 	// add the frames to the response.
 	response.Frames = append(response.Frames, frame)
 
@@ -116,13 +102,18 @@ func (d *SampleDatasource) query(_ context.Context, pCtx backend.PluginContext, 
 func (d *SampleDatasource) CheckHealth(_ context.Context, req *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
 	log.DefaultLogger.Info("CheckHealth called", "request", req)
 
+	urlRes, urlErr := http.Get(req.PluginContext.DataSourceInstanceSettings.URL)
+
 	var status = backend.HealthStatusOk
 	var message = "Data source is working"
 
-	if rand.Int()%2 == 0 {
+	if urlErr != nil {
 		status = backend.HealthStatusError
-		message = "randomized error"
+		log.DefaultLogger.Info("Status request", "error", urlErr)
+		message = urlErr.Error()
 	}
+
+	log.DefaultLogger.Info("Status request", "result", urlRes)
 
 	return &backend.CheckHealthResult{
 		Status:  status,
