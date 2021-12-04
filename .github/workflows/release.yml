@@ -61,12 +61,12 @@ jobs:
             echo "::set-output name=has-backend::true"
           fi
 
-      # - name: Test backend
-      #   if: steps.check-for-backend.outputs.has-backend == 'true'
-      #   uses: magefile/mage-action@v1
-      #   with:
-      #     version: latest
-      #     args: coverage
+      - name: Test backend
+        if: steps.check-for-backend.outputs.has-backend == 'true'
+        uses: magefile/mage-action@v1
+        with:
+          version: latest
+          args: coverage
 
       - name: Build backend
         if: steps.check-for-backend.outputs.has-backend == 'true'
