@@ -1,6 +1,6 @@
 {
   "name": "kwm-sys-sensor-data-source",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Provides Sensor Data",
   "scripts": {
     "build": "grafana-toolkit plugin:build",
@@ -10,7 +10,7 @@
     "sign": "grafana-toolkit plugin:sign",
     "start": "yarn watch"
   },
-  "author": false,
+  "author": "MSDev",
   "license": "Apache-2.0",
   "devDependencies": {
     "@grafana/data": "latest",
